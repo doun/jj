@@ -21,6 +21,7 @@ use jj_lib::graph::GraphEdge;
 use jj_lib::graph::GraphEdgeType;
 use jj_lib::graph::TopoGroupedGraphIterator;
 use jj_lib::graph::reverse_graph;
+use jj_lib::merged_tree::MergedTree;
 use jj_lib::repo::Repo as _;
 use jj_lib::revset::RevsetEvaluationError;
 use jj_lib::revset::RevsetExpression;
@@ -33,6 +34,7 @@ use crate::cli_util::CommandHelper;
 use crate::cli_util::LogContentFormat;
 use crate::cli_util::RevisionArg;
 use crate::cli_util::format_template;
+use crate::cli_util::print_unmatched_explicit_paths;
 use crate::command_error::CommandError;
 use crate::complete;
 use crate::diff_util::DiffFormatArgs;
@@ -208,8 +210,27 @@ pub(crate) fn cmd_log(
                     Box::new(forward_iter)
                 }
             };
-            for node in iter {
-                let (commit_id, edges) = node?;
+
+            let nodes: Vec<(CommitId, Commit, Vec<_>)> = iter
+                .map(|node| {
+                    node.map_err(|err| err.into_backend_error())
+                        .and_then(|(commit_id, edges)| {
+                            let commit = store.get_commit(&commit_id)?;
+
+                            Ok((commit_id, commit, edges))
+                        })
+                })
+                .try_collect()?;
+
+            let trees: Vec<MergedTree> = nodes
+                .iter()
+                .map(|(_, commit, _)| commit.tree())
+                .try_collect()?;
+
+            print_unmatched_explicit_paths(ui, &workspace_command, &fileset_expression, &trees)?;
+
+            for node in nodes {
+                let (commit_id, commit, edges) = node;
 
                 // The graph is keyed by (CommitId, is_synthetic)
                 let mut graphlog_edges = vec![];
@@ -241,7 +262,6 @@ pub(crate) fn cmd_log(
                 }
                 let mut buffer = vec![];
                 let key = (commit_id, false);
-                let commit = store.get_commit(&key.0)?;
                 let within_graph =
                     with_content_format.sub_width(graph.width(&key, &graphlog_edges));
                 within_graph.write(ui.new_formatter(&mut buffer).as_mut(), |formatter| {
@@ -299,8 +319,15 @@ pub(crate) fn cmd_log(
                     Box::new(forward_iter)
                 }
             };
-            for commit_or_error in iter.commits(store) {
-                let commit = commit_or_error?;
+
+            let commits: Vec<Commit> = iter.commits(store).try_collect()?;
+
+            let trees: Vec<MergedTree> =
+                commits.iter().map(|commit| commit.tree()).try_collect()?;
+
+            print_unmatched_explicit_paths(ui, &workspace_command, &fileset_expression, &trees)?;
+
+            for commit in commits {
                 with_content_format
                     .write(formatter, |formatter| template.format(&commit, formatter))?;
                 if let Some(renderer) = &diff_renderer {
