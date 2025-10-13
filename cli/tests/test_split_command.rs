@@ -158,6 +158,7 @@ fn test_split_by_paths() {
     let output = work_dir.run_jj(["split", "-r", "@-", "nonexistent"]);
     insta::assert_snapshot!(output, @r"
     ------- stderr -------
+    Warning: No matching entries for paths: nonexistent
     Warning: No changes have been selected, so the new revision will be empty
     Rebased 1 descendant commits
     Selected changes : qpvuntsm 49416632 (empty) (no description set)
