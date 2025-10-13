@@ -2829,9 +2829,14 @@ pub fn print_unmatched_explicit_paths<'a>(
     trees: impl IntoIterator<Item = &'a MergedTree>,
 ) -> io::Result<()> {
     let mut explicit_paths = expression.explicit_paths().collect_vec();
+    // If there are no explicit paths to show then return early.
+    if explicit_paths.is_empty() {
+        return Ok(());
+    }
     for tree in trees {
         // TODO: propagate errors
         explicit_paths.retain(|&path| tree.path_value(path).unwrap().is_absent());
+        // If no more paths are left to check then return early.
         if explicit_paths.is_empty() {
             return Ok(());
         }
