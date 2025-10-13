@@ -510,6 +510,16 @@ fn test_relative_paths() {
     unfixed
     [EOF]
     ");
+
+    // The output filtered to a non-existent file should display a warning.
+    let output = work_dir.run_jj(["fix", "nonexistent"]);
+    insta::assert_snapshot!(output, @r"
+    ------- stderr -------
+    Warning: No matching entries for paths: nonexistent
+    Fixed 0 commits of 1 checked.
+    Nothing changed.
+    [EOF]
+    ");
 }
 
 #[test]
@@ -1455,6 +1465,7 @@ fn test_all_files() {
     ]);
     insta::assert_snapshot!(output, @r"
     ------- stderr -------
+    Warning: No matching entries for paths: does_not.exist
     Fixed 2 commits of 2 checked.
     Working copy  (@) now at: rlvkpnrz d8503fee child
     Parent commit (@-)      : qpvuntsm 62c6ee98 parent
