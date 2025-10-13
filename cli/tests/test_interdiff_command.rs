@@ -126,12 +126,31 @@ fn test_interdiff_paths() {
         "right",
         "file1",
         "file2",
+        "nonexistent",
     ]);
     insta::assert_snapshot!(output, @r"
     Modified regular file file1:
        1    1: barbaz
     Modified regular file file2:
        1    1: barbaz
+    [EOF]
+    ------- stderr -------
+    Warning: No matching entries for paths: nonexistent
+    [EOF]
+    ");
+
+    // The output filtered to a non-existent file should display a warning.
+    let output = work_dir.run_jj([
+        "interdiff",
+        "--from",
+        "left",
+        "--to",
+        "right",
+        "nonexistent",
+    ]);
+    insta::assert_snapshot!(output, @r"
+    ------- stderr -------
+    Warning: No matching entries for paths: nonexistent
     [EOF]
     ");
 }
