@@ -19,6 +19,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `core.watchman.register_snapshot_trigger`
   - `diff.format`
 
+* The config option `git.auto-local-bookmark` is
+  deprecated in favor of `git.auto-track-bookmarks`. See
+  <https://jj-vcs.github.io/jj/latest/config/#automatic-tracking-of-bookmarks>.
+
 ### Deprecations
 
  * `jj bisect run --command <cmd>` is deprecated in favor of

@@ -59,6 +59,7 @@ struct UserSettingsData {
 
 #[derive(Debug, Clone)]
 pub struct GitSettings {
+    // TODO: Delete in jj 0.41.0+
     pub auto_local_bookmark: bool,
     pub auto_track_bookmarks: RemoteBookmarkNamePattern,
     pub abandon_unreachable_commits: bool,
