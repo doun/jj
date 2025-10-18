@@ -1400,6 +1400,20 @@ fn test_files() {
     [EOF]
     ");
 
+    let output = work_dir.complete_fish(["file", "show", "f_dir/../"]);
+    insta::assert_snapshot!(output.normalize_backslash(), @r"
+    f_added
+    f_added_2
+    f_another_renamed_2
+    f_copied
+    f_dir/
+    f_modified
+    f_not_yet_copied
+    f_renamed
+    f_unchanged
+    [EOF]
+    ");
+
     let output = work_dir.complete_fish(["file", "annotate", "-r@-", "f_"]);
     insta::assert_snapshot!(output.normalize_backslash(), @r"
     f_added

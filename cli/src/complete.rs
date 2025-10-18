@@ -740,9 +740,13 @@ pub fn branch_name_equals_any_revision(current: &std::ffi::OsStr) -> Vec<Complet
 }
 
 fn dir_prefix_from<'a>(path: &'a str, current: &str) -> Option<&'a str> {
-    path[current.len()..]
+    let remainder = path.strip_prefix(current).unwrap_or(path);
+    remainder
         .split_once(std::path::MAIN_SEPARATOR)
-        .map(|(next, _)| path.split_at(current.len() + next.len() + 1).0)
+        .map(|(next, _)| {
+            path.split_at(path.len() - remainder.len() + next.len() + 1)
+                .0
+        })
 }
 
 fn current_prefix_to_fileset(current: &str) -> String {
